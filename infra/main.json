@@ -1,0 +1,401 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.46.1.21595",
+      "templateHash": "3231625521227247"
+    }
+  },
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "eastus",
+      "metadata": {
+        "description": "Deployment location for the demo resource group and regional resources."
+      }
+    },
+    "resourceGroupName": {
+      "type": "string",
+      "defaultValue": "NSP-Demo-RG",
+      "metadata": {
+        "description": "Resource group name for the NSP demo."
+      }
+    },
+    "subscriptionId": {
+      "type": "string",
+      "defaultValue": "[subscription().subscriptionId]",
+      "metadata": {
+        "description": "Subscription ID containing the demo."
+      }
+    },
+    "tags": {
+      "type": "object",
+      "defaultValue": {
+        "demo": "NSP-Demo",
+        "purpose": "network-security-perimeter",
+        "managedBy": "bicep"
+      },
+      "metadata": {
+        "description": "Tags applied to demo resources."
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2024-03-01",
+      "name": "[parameters('resourceGroupName')]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]"
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "NSP-demo-resources",
+      "resourceGroup": "[parameters('resourceGroupName')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "subscriptionId": {
+            "value": "[parameters('subscriptionId')]"
+          },
+          "tags": {
+            "value": "[parameters('tags')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.46.1.21595",
+              "templateHash": "322867368017616847"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "Deployment location."
+              }
+            },
+            "subscriptionId": {
+              "type": "string",
+              "metadata": {
+                "description": "Subscription containing the demo."
+              }
+            },
+            "tags": {
+              "type": "object",
+              "metadata": {
+                "description": "Common resource tags."
+              }
+            }
+          },
+          "variables": {
+            "suffix": "[uniqueString(parameters('subscriptionId'), resourceGroup().id)]",
+            "vnetName": "NSP-demo-vnet",
+            "storageName": "[toLower(format('nspdemo{0}', variables('suffix')))]",
+            "keyVaultName": "[toLower(format('NSP-demo-kv-{0}', variables('suffix')))]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2024-07-01",
+              "name": "[variables('vnetName')]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "addressSpace": {
+                  "addressPrefixes": [
+                    "10.42.0.0/16"
+                  ]
+                },
+                "subnets": [
+                  {
+                    "name": "NSP-demo-snet-workload",
+                    "properties": {
+                      "addressPrefix": "10.42.1.0/24"
+                    }
+                  },
+                  {
+                    "name": "NSP-demo-snet-management",
+                    "properties": {
+                      "addressPrefix": "10.42.2.0/24"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Microsoft.Network/networkManagers",
+              "apiVersion": "2023-09-01",
+              "name": "NSP-demo-avnm",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "networkManagerScopes": {
+                  "managementGroups": [],
+                  "subscriptions": [
+                    "[subscription().id]"
+                  ]
+                },
+                "networkManagerScopeAccesses": [
+                  "Connectivity",
+                  "SecurityAdmin"
+                ]
+              }
+            },
+            {
+              "type": "Microsoft.Network/networkManagers/networkGroups",
+              "apiVersion": "2023-09-01",
+              "name": "[format('{0}/{1}', 'NSP-demo-avnm', 'NSP-demo-network-group')]",
+              "properties": {
+                "description": "VNet group used by the NSP demo security-admin policy."
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkManagers', 'NSP-demo-avnm')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/networkManagers/networkGroups/staticMembers",
+              "apiVersion": "2023-09-01",
+              "name": "[format('{0}/{1}/{2}', 'NSP-demo-avnm', 'NSP-demo-network-group', 'NSP-demo-vnet-member')]",
+              "properties": {
+                "resourceId": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkManagers/networkGroups', 'NSP-demo-avnm', 'NSP-demo-network-group')]",
+                "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/networkManagers/securityAdminConfigurations",
+              "apiVersion": "2023-09-01",
+              "name": "[format('{0}/{1}', 'NSP-demo-avnm', 'NSP-demo-security-admin')]",
+              "properties": {
+                "description": "Deny inbound RDP in the demo VNet to illustrate centralized AVNM governance."
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkManagers', 'NSP-demo-avnm')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/networkManagers/securityAdminConfigurations/ruleCollections",
+              "apiVersion": "2023-09-01",
+              "name": "[format('{0}/{1}/{2}', 'NSP-demo-avnm', 'NSP-demo-security-admin', 'NSP-demo-inbound-baseline')]",
+              "properties": {
+                "appliesToGroups": [
+                  {
+                    "networkGroupId": "[resourceId('Microsoft.Network/networkManagers/networkGroups', 'NSP-demo-avnm', 'NSP-demo-network-group')]"
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkManagers/networkGroups', 'NSP-demo-avnm', 'NSP-demo-network-group')]",
+                "[resourceId('Microsoft.Network/networkManagers/securityAdminConfigurations', 'NSP-demo-avnm', 'NSP-demo-security-admin')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/networkManagers/securityAdminConfigurations/ruleCollections/rules",
+              "apiVersion": "2023-09-01",
+              "name": "[format('{0}/{1}/{2}/{3}', 'NSP-demo-avnm', 'NSP-demo-security-admin', 'NSP-demo-inbound-baseline', 'NSP-demo-deny-rdp')]",
+              "kind": "Custom",
+              "properties": {
+                "access": "Deny",
+                "direction": "Inbound",
+                "priority": 100,
+                "protocol": "Tcp",
+                "sourcePortRanges": [
+                  "*"
+                ],
+                "destinationPortRanges": [
+                  "3389"
+                ],
+                "sources": [
+                  {
+                    "addressPrefix": "*",
+                    "addressPrefixType": "IPPrefix"
+                  }
+                ],
+                "destinations": [
+                  {
+                    "addressPrefix": "*",
+                    "addressPrefixType": "IPPrefix"
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkManagers/securityAdminConfigurations/ruleCollections', 'NSP-demo-avnm', 'NSP-demo-security-admin', 'NSP-demo-inbound-baseline')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Storage/storageAccounts",
+              "apiVersion": "2023-05-01",
+              "name": "[variables('storageName')]",
+              "location": "[parameters('location')]",
+              "kind": "StorageV2",
+              "sku": {
+                "name": "Standard_LRS"
+              },
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "minimumTlsVersion": "TLS1_2",
+                "allowBlobPublicAccess": false,
+                "publicNetworkAccess": "Enabled",
+                "supportsHttpsTrafficOnly": true
+              }
+            },
+            {
+              "type": "Microsoft.KeyVault/vaults",
+              "apiVersion": "2023-07-01",
+              "name": "[variables('keyVaultName')]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "tenantId": "[tenant().tenantId]",
+                "sku": {
+                  "family": "A",
+                  "name": "standard"
+                },
+                "enableRbacAuthorization": true,
+                "enableSoftDelete": true,
+                "softDeleteRetentionInDays": 7,
+                "publicNetworkAccess": "Enabled"
+              }
+            },
+            {
+              "type": "Microsoft.OperationalInsights/workspaces",
+              "apiVersion": "2023-09-01",
+              "name": "NSP-demo-log",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "retentionInDays": 30,
+                "features": {
+                  "enableLogAccessUsingOnlyResourcePermissions": true
+                },
+                "publicNetworkAccessForIngestion": "Enabled",
+                "publicNetworkAccessForQuery": "Enabled"
+              }
+            },
+            {
+              "type": "Microsoft.Network/networkSecurityPerimeters",
+              "apiVersion": "2025-05-01",
+              "name": "NSP-demo-perimeter",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "properties": {}
+            },
+            {
+              "type": "Microsoft.Network/networkSecurityPerimeters/profiles",
+              "apiVersion": "2025-05-01",
+              "name": "[format('{0}/{1}', 'NSP-demo-perimeter', 'NSP-demo-profile')]",
+              "properties": {},
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityPerimeters', 'NSP-demo-perimeter')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/networkSecurityPerimeters/profiles/accessRules",
+              "apiVersion": "2025-05-01",
+              "name": "[format('{0}/{1}/{2}', 'NSP-demo-perimeter', 'NSP-demo-profile', 'NSP-demo-allow-azure-monitor')]",
+              "properties": {
+                "direction": "Outbound",
+                "fullyQualifiedDomainNames": [
+                  "dc.services.visualstudio.com",
+                  "*.ods.opinsights.azure.com"
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityPerimeters/profiles', 'NSP-demo-perimeter', 'NSP-demo-profile')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/networkSecurityPerimeters/resourceAssociations",
+              "apiVersion": "2025-05-01",
+              "name": "[format('{0}/{1}', 'NSP-demo-perimeter', 'NSP-demo-storage-association')]",
+              "properties": {
+                "accessMode": "Enforced",
+                "privateLinkResource": {
+                  "id": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageName'))]"
+                },
+                "profile": {
+                  "id": "[resourceId('Microsoft.Network/networkSecurityPerimeters/profiles', 'NSP-demo-perimeter', 'NSP-demo-profile')]"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityPerimeters', 'NSP-demo-perimeter')]",
+                "[resourceId('Microsoft.Network/networkSecurityPerimeters/profiles', 'NSP-demo-perimeter', 'NSP-demo-profile')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('storageName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/networkSecurityPerimeters/resourceAssociations",
+              "apiVersion": "2025-05-01",
+              "name": "[format('{0}/{1}', 'NSP-demo-perimeter', 'NSP-demo-keyvault-association')]",
+              "properties": {
+                "accessMode": "Enforced",
+                "privateLinkResource": {
+                  "id": "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+                },
+                "profile": {
+                  "id": "[resourceId('Microsoft.Network/networkSecurityPerimeters/profiles', 'NSP-demo-perimeter', 'NSP-demo-profile')]"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
+                "[resourceId('Microsoft.Network/networkSecurityPerimeters', 'NSP-demo-perimeter')]",
+                "[resourceId('Microsoft.Network/networkSecurityPerimeters/profiles', 'NSP-demo-perimeter', 'NSP-demo-profile')]"
+              ]
+            }
+          ],
+          "outputs": {
+            "perimeterId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/networkSecurityPerimeters', 'NSP-demo-perimeter')]"
+            },
+            "storageAccountName": {
+              "type": "string",
+              "value": "[variables('storageName')]"
+            },
+            "keyVaultName": {
+              "type": "string",
+              "value": "[variables('keyVaultName')]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('resourceGroupName'))]"
+      ]
+    }
+  ],
+  "outputs": {
+    "resourceGroupId": {
+      "type": "string",
+      "value": "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('resourceGroupName'))]"
+    },
+    "perimeterId": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', 'NSP-demo-resources'), '2025-04-01').outputs.perimeterId.value]"
+    },
+    "storageAccountName": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', 'NSP-demo-resources'), '2025-04-01').outputs.storageAccountName.value]"
+    },
+    "keyVaultName": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', 'NSP-demo-resources'), '2025-04-01').outputs.keyVaultName.value]"
+    }
+  }
+}
