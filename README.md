@@ -15,14 +15,14 @@ Names follow the `NSP-demo-<service-or-function>` convention where Azure naming 
 ## Prerequisites
 
 1. Azure CLI with the Bicep extension.
-2. Access to subscription `6cbb5372-2516-4048-b672-a3e0a36fac8b`.
+2. Access to the Azure subscription you choose with `az account set`.
 3. Registered providers for `Microsoft.Network`, `Microsoft.Storage`, `Microsoft.KeyVault`, and `Microsoft.OperationalInsights`.
 4. Confirm that NSP and its supported resource associations are available in `eastus` for the subscription.
 
 ## Validate and deploy
 
 ```powershell
-az account set --subscription 6cbb5372-2516-4048-b672-a3e0a36fac8b
+az account set --subscription <your-subscription-id>
 az bicep build --file infra/main.bicep
 az deployment sub what-if `
   --location eastus `
