@@ -1,5 +1,16 @@
 # NSP-Demo mini hackathon
 
+## Event flow
+
+Run the tracks in order. Track 4 is the capstone: it uses the environment built in Track 1, the evidence workflow from Track 2, and the threat model from Track 3.
+
+| Track | Timebox | Outcome |
+| --- | ---: | --- |
+| Build | 30 min | Working NSP and AVNM baseline |
+| Operate | 30 min | Repeatable evidence and rollback runbook |
+| Security perspective | 20 min | Threat/control matrix |
+| External PaaS exfiltration | 40 min | Proven Audit-to-Enforced network boundary |
+
 ## Track 1: Build
 
 **Challenge:** deploy the baseline and prove the control plane is understandable.
@@ -49,7 +60,26 @@
 
 ## Track 4: External PaaS exfiltration
 
-Run [the external PaaS exfiltration exercise](external-paas-exfiltration.md). Use a disposable Function App outside the perimeter as the client, a short-lived write-only SAS, and correlated NSP/Storage/Log Analytics evidence. Demonstrate the same request in Audit and Enforced modes and explain why a valid SAS is not sufficient to cross the enforced perimeter.
+Run [the external PaaS exfiltration exercise](external-paas-exfiltration.md) as the capstone. Use a disposable Function App outside the perimeter as the client, a short-lived write-only SAS, and correlated NSP/Storage/Log Analytics evidence. Demonstrate the same request in Audit and Enforced modes and explain why a valid SAS is not sufficient to cross the enforced perimeter.
+
+### Capstone handoff
+
+Each team must hand the next team:
+
+1. The target Storage account and test-container name.
+2. The probe invocation timestamp and request ID.
+3. The NSP association mode used for each run.
+4. The Log Analytics query or portal screenshots used as evidence.
+5. A statement of whether the blob was created.
+
+The receiving team must reproduce the enforced run without changing the probe code or SAS permissions.
+
+### Scoring
+
+- 25%: baseline deployed and architecture explained.
+- 25%: operational evidence is reproducible and includes cleanup.
+- 20%: threat/control matrix distinguishes NSP from RBAC, encryption, and DLP.
+- 30%: capstone proves the same external PaaS request succeeds in the baseline and is blocked in Enforced mode, with correlated logs and no test blob after enforcement.
 
 ## Stretch goals
 
