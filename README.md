@@ -40,6 +40,8 @@ Deployment is intentionally not run by this package. Review the what-if output a
 
 See [docs/hackathon.md](docs/hackathon.md) for the Build, Operate, and Security challenge tracks.
 
+The focused PaaS-to-PaaS exfiltration lab is in [docs/external-paas-exfiltration.md](docs/external-paas-exfiltration.md).
+
 ## References
 
 See [docs/references.md](docs/references.md) and [docs/architecture.md](docs/architecture.md).

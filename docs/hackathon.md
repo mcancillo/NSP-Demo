@@ -47,6 +47,10 @@
 
 **Deliverable:** a threat/control matrix with at least five threats, the control that helps, residual risk, and an evidence source.
 
+## Track 4: External PaaS exfiltration
+
+Run [the external PaaS exfiltration exercise](external-paas-exfiltration.md). Use a disposable Function App outside the perimeter as the client, a short-lived write-only SAS, and correlated NSP/Storage/Log Analytics evidence. Demonstrate the same request in Audit and Enforced modes and explain why a valid SAS is not sufficient to cross the enforced perimeter.
+
 ## Stretch goals
 
 - Add a second profile with a narrower outbound FQDN rule.
