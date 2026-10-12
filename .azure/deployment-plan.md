@@ -1,6 +1,6 @@
 # Deployment Plan
 
-Status: Validated
+Status: Deployed
 
 ## 1. Objective
 
@@ -49,3 +49,7 @@ az deployment sub what-if --location eastus --template-file infra\main.bicep --p
 ```
 
 Result: Bicep build passed and what-if reported 16 resources to create with no failures.
+
+## 8. Deployment Result
+
+Deployment succeeded after correcting Azure naming and rule constraints. The deployed resource group contains the NSP perimeter, profile, enforced Storage and Key Vault associations, AVNM, VNet, Storage, Key Vault, and Log Analytics resources.

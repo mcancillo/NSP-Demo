@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.46.1.21595",
-      "templateHash": "3231625521227247"
+      "templateHash": "575581572877297083"
     }
   },
   "parameters": {
@@ -78,7 +78,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.46.1.21595",
-              "templateHash": "322867368017616847"
+              "templateHash": "17133011615401573411"
             }
           },
           "parameters": {
@@ -105,7 +105,7 @@
             "suffix": "[uniqueString(parameters('subscriptionId'), resourceGroup().id)]",
             "vnetName": "NSP-demo-vnet",
             "storageName": "[toLower(format('nspdemo{0}', variables('suffix')))]",
-            "keyVaultName": "[toLower(format('NSP-demo-kv-{0}', variables('suffix')))]"
+            "keyVaultName": "[toLower(format('nspdemokv{0}', variables('suffix')))]"
           },
           "resources": [
             {
@@ -216,7 +216,7 @@
                 "priority": 100,
                 "protocol": "Tcp",
                 "sourcePortRanges": [
-                  "*"
+                  "0-65535"
                 ],
                 "destinationPortRanges": [
                   "3389"
@@ -313,7 +313,7 @@
                 "direction": "Outbound",
                 "fullyQualifiedDomainNames": [
                   "dc.services.visualstudio.com",
-                  "*.ods.opinsights.azure.com"
+                  "ods.opinsights.azure.com"
                 ]
               },
               "dependsOn": [

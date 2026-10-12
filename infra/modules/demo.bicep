@@ -10,7 +10,7 @@ param tags object
 var suffix = uniqueString(subscriptionId, resourceGroup().id)
 var vnetName = 'NSP-demo-vnet'
 var storageName = toLower('nspdemo${suffix}')
-var keyVaultName = toLower('NSP-demo-kv-${suffix}')
+var keyVaultName = toLower('nspdemokv${suffix}')
 
 resource vnet 'Microsoft.Network/virtualNetworks@2024-07-01' = {
   name: vnetName
@@ -103,7 +103,7 @@ resource denyRdp 'Microsoft.Network/networkManagers/securityAdminConfigurations/
     priority: 100
     protocol: 'Tcp'
     sourcePortRanges: [
-      '*'
+      '0-65535'
     ]
     destinationPortRanges: [
       '3389'
@@ -190,7 +190,7 @@ resource outboundRule 'Microsoft.Network/networkSecurityPerimeters/profiles/acce
     direction: 'Outbound'
     fullyQualifiedDomainNames: [
       'dc.services.visualstudio.com'
-      '*.ods.opinsights.azure.com'
+      'ods.opinsights.azure.com'
     ]
   }
 }
